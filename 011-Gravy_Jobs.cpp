@@ -1,10 +1,15 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 using ull = unsigned long long int;
 
 struct Task {
     int due, len, praise;
+
+    bool operator<( const Task& right ) const {
+        return due == right.due ? len < right.len : due < right.due;
+    }
 };
 
 Task initTask(int due, int len, int praise) {
@@ -29,6 +34,8 @@ int main() {
         max_len = D;
     }
 
+    sort(tasks.begin(), tasks.end());
+
     vector<vector <ull> > dp(N + 1, vector<ull>(max_len + 1));
 
     for (int i = 0; i < N; i++) {
@@ -40,11 +47,11 @@ int main() {
 
     cout << dp[N][max_len] << endl;
 
-    cout << "-----------------\n";
-    for (int i = 0; i <= N; i++) {
-        for (int j = 0; j <= D; j++) {
-            cout << dp[i][j] << ' ';
-        }
-        cout << endl;
-    }
+    // cout << "-----------------\n";
+    // for (int i = 0; i <= N; i++) {
+    //     for (int j = 0; j <= max_len; j++) {
+    //         cout << dp[i][j] << ' ';
+    //     }
+    //     cout << endl;
+    // }
 }
