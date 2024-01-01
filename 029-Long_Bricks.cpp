@@ -3,66 +3,89 @@
 using namespace std;
 using ll = long long int;
 
-const ll INFTY = 9223372036854775807;
-
 class LazySegmentTree {
 private:
-    ll size, depth, capacity;
+    ll size, capacity;
     vector<ll> nodes, lazy;
 
     int _leftChild(int index) { return index * 2 + 1; }
     int _rightChild(int index) { return index * 2 + 2; }
     int _parent(int index) { return (index - 1) / 2; }
+    bool _hasChild(int index) { return index < (int)(this->lazy.size()); }
+    
+    void _propagate(int index) {
+        nodes[_leftChild(index)] = nodes[index];
+        lazy[_leftChild(index)] = nodes[index];
+        
+        nodes[_rightChild(index)] = nodes[index];
+        lazy[_rightChild(index)] = nodes[index];
+        
+        lazy[index] = 0;
+    }
 
     ll _getMaxVal(int begin, int end, int index, int left, int right) {
         // get max value of [begin, end)
+        // for now it looks at [left, right)
         // nodes[index] denotes the max value of [left, right)
 
-        if (index > nodes.size()) return -INFTY;
-
-        // out of range
-        if (right <= begin || end <= left) return -INFTY;
-
-        // lazy propagation
-        if (lazy[index] != 0) {
-            nodes[_leftChild(index)] = lazy[index];
-            nodes[_rightChild(index)] = lazy[index];
-            lazy[index] = 0;
-        }
-
-        // [left, right) is a subset of [begin, end)
+        // if [left, right) is out of [begin, end)
+        if (right <= begin || end <= left) return 0;
+        
+        // if [left, right) is a subset of [begin, end)
         if (begin <= left && right <= end) return nodes[index];
 
-        int left_value = _getMaxVal(begin, end, _leftChild(index), left, right / 2);
+        // if [begin, end) is a subset of [left, right)
+        // or [left, right) includes a subset of [begin, end),
+        // then [left, right) needs to be narrowed.
+
+        // lazy propagation
+        if (_hasChild(index) && lazy[index] != 0) _propagate(index);
+
+        // nodes[index] must have children
+        int left_value = _getMaxVal(begin, end, _leftChild(index), left, (left + right) / 2);
         int right_value = _getMaxVal(begin, end, _rightChild(index), (left + right) / 2, right);
 
         return max(left_value, right_value);
     }
 
     void _rangeUpdate(int begin, int end, int value, int index, int left, int right) {
-        // update values of [begin, end) to value
+        // set values of [begin, end) to `value`
+        // for now it looks at [left, right) 
         // nodes[index] denotes the max value of [left, right)
 
-        // out of range
+        // if [left, right) is out of [begin, end)
         if (right <= begin || end <= left) return;
 
-        // [left, right) is a subset of [begin, end)
+        // if [left, right) is a subset of [begin, end)
+        // stashed update `lazy[index]` which covers [left, right) can be erased.
         if (begin <= left && right <= end) {
-            lazy[index] = value;
+            nodes[index] = value; // update
+            if (_hasChild(index)) lazy[index] = value; // halt propagation
             return;
         }
+        
+        // if [begin, end) is a subset of [left, right)
+        // or [left, right) includes a subset of [begin, end),
+        // then [left, right) needs to be narrowed.
+        
+        // lazy propagation
+        if (_hasChild(index) && lazy[index] != 0) _propagate(index);
 
-        _rangeUpdate(begin, end, value, _leftChild(index), left, right / 2);
+        if (nodes[index] < value) nodes[index] = value; // update
+        
+        // nodes[index] must have children
+        _rangeUpdate(begin, end, value, _leftChild(index), left, (left + right) / 2);
         _rangeUpdate(begin, end, value, _rightChild(index), (left + right) / 2, right);
     }
 
 public:
     LazySegmentTree(ll size) {
         this->size = size;
-        for (this->depth = 0; (1 << this->depth) <= size; this->depth += 1);
-        this->capacity = 1 << (this->depth - 1);
-        this->nodes = vector<ll>((1 << this->depth) - 1);
-        this->lazy = vector<ll>((1 << this->depth) - 1);
+        ll depth;
+        for (depth = 1; (1 << (depth - 1)) < size; depth++);
+        this->capacity = 1 << (depth - 1);
+        this->nodes = vector<ll>((1 << depth) - 1);
+        this->lazy = vector<ll>((1 << depth) - 1);
     }
 
     ll getMaxVal(int begin, int end) {
@@ -82,11 +105,8 @@ int main() {
 
     for (int n = 0; n < N; n++) {
         cin >> L >> R;
-        tmp = lst.getMaxVal(L, R + 1);
-        lst.rangeUpdate(L, R + 1, tmp + 1);
-    }
-
-    for (int left = 1; left <= W; left++) {
-        cout << lst.getMaxVal(left, left + 1) << endl;
+        tmp = lst.getMaxVal(L - 1, R);
+        cout << (tmp + 1) << endl;
+        lst.rangeUpdate(L - 1, R, tmp + 1);
     }
 }
