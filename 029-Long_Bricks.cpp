@@ -5,13 +5,13 @@ using ll = long long int;
 
 class LazySegmentTree {
 private:
-    ll size, capacity;
+    ll capacity;
     vector<ll> nodes, lazy;
 
     int _leftChild(int index) { return index * 2 + 1; }
     int _rightChild(int index) { return index * 2 + 2; }
     int _parent(int index) { return (index - 1) / 2; }
-    bool _hasChild(int index) { return index < (int)(this->lazy.size()); }
+    bool _hasChild(int index) { return index < capacity; }
     
     void _propagate(int index) {
         nodes[_leftChild(index)] = nodes[index];
@@ -79,13 +79,10 @@ private:
     }
 
 public:
-    LazySegmentTree(ll size) {
-        this->size = size;
-        ll depth;
-        for (depth = 1; (1 << (depth - 1)) < size; depth++);
-        this->capacity = 1 << (depth - 1);
-        this->nodes = vector<ll>((1 << depth) - 1);
-        this->lazy = vector<ll>((1 << depth) - 1);
+    LazySegmentTree(ll capacity) {
+        this->capacity = capacity;
+        this->nodes = vector<ll>(2 * capacity - 1);
+        this->lazy = vector<ll>(2 * capacity - 1);
     }
 
     ll getMaxVal(int begin, int end) {
@@ -93,7 +90,11 @@ public:
     }
 
     void rangeUpdate(int begin, int end, int value) {
-        return _rangeUpdate(begin, end, value, 0, 0, this->capacity);
+        _rangeUpdate(begin, end, value, 0, 0, this->capacity);
+    }
+    
+    void update(int index, int value) {
+        _rangeUpdate(index, index + 1, value, 0, 0, this->capacity);
     }
 };
 
@@ -101,7 +102,9 @@ int main() {
     int W, N, L, R, tmp;
     cin >> W >> N;
 
-    LazySegmentTree lst = LazySegmentTree(W);
+    int capacity;
+    for (capacity = 1; capacity < W; capacity *= 2);
+    LazySegmentTree lst = LazySegmentTree(capacity);
 
     for (int n = 0; n < N; n++) {
         cin >> L >> R;
