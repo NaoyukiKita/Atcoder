@@ -8,7 +8,6 @@ using ull = unsigned long long int;
 const int MAX_DIGIT = 128;
 
 ull gcd(ull X, ull Y) {
-    cout << X << " " << Y << endl;
     if (Y == 0) return X;
     return gcd(Y, X % Y);
 }
