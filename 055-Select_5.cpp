@@ -4,7 +4,6 @@ using namespace std;
 using ll = long long int;
 
 ll func(vector<int>& A, int begin, ll current, int counter, int target, int mod) {
-    // cout << "func(A, " << begin << ", " << current << ", " << counter << ", " << target << ", " << mod << ")\n";
     if (counter == 0) return current == target;
     
     ll sum = 0;
